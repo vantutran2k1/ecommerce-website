@@ -22,9 +22,16 @@ export class ProductService {
     );
   }
 
+  getProductCategory(categoryId: number): Observable<ProductCategory> {
+    const searchUrl = `${this.categoryUrl}/search/findById?id=${categoryId}`;
+    return this.httpClient.get<GetResponseCategories>(searchUrl).pipe(
+      map(response => response._embedded.productCategories[0])
+    );
+  }
+
   getProductCategories(): Observable<ProductCategory[]> {
-    return this.httpClient.get<GetResponseCategory>(this.categoryUrl).pipe(
-      map(response => response._embedded.productCategory)
+    return this.httpClient.get<GetResponseCategories>(this.categoryUrl).pipe(
+      map(response => response._embedded.productCategories)
     );
   }
 }
@@ -35,8 +42,8 @@ interface GetResponseProducts {
   }
 }
 
-interface GetResponseCategory {
+interface GetResponseCategories {
   _embedded: {
-    productCategory: ProductCategory[];
+    productCategories: ProductCategory[];
   }
 }

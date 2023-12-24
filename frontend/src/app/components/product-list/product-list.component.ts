@@ -11,26 +11,30 @@ import {ActivatedRoute} from "@angular/router";
 export class ProductListComponent implements OnInit {
   products: Product[] = [];
   currentCategoryId: number = 1;
+  currentCategoryName: string = "";
 
   constructor(private productService: ProductService, private route: ActivatedRoute) {
   }
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(() => {
-      this.listProducts();
-    });
+    this.route.paramMap.subscribe(() => this.listProducts());
   }
 
   listProducts() {
-    const hasCategoryId: boolean = this.route.snapshot.paramMap.has('id');
-    if (hasCategoryId) {
+    if (this.hasCategoryId()) {
       this.currentCategoryId = +this.route.snapshot.paramMap.get('id')!;
     }
 
-    this.productService.getProductList(this.currentCategoryId).subscribe(
-      data => {
-        this.products = data;
-      }
-    )
+    this.setCategoryName();
+
+    this.productService.getProductList(this.currentCategoryId).subscribe(data => this.products = data)
+  }
+
+  private hasCategoryId(): boolean {
+    return this.route.snapshot.paramMap.has('id');
+  }
+
+  private setCategoryName() {
+    this.productService.getProductCategory(this.currentCategoryId).subscribe(data => this.currentCategoryName = data.categoryName);
   }
 }
