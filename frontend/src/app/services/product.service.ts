@@ -14,24 +14,34 @@ export class ProductService {
   constructor(private httpClient: HttpClient) {
   }
 
-  getProductList(categoryId: number): Observable<Product[]> {
-    const searchUrl = `${this.productUrl}/search/findByCategoryId?id=${categoryId}`;
-
-    return this.httpClient.get<GetResponseProducts>(searchUrl).pipe(
-      map(response => response._embedded.products)
-    );
+  getProductsByCategory(categoryId: number): Observable<Product[]> {
+    return this.getProducts(`${this.productUrl}/search/findByCategoryId?id=${categoryId}`);
   }
 
-  getProductCategory(categoryId: number): Observable<ProductCategory> {
+  getProductsByName(name: string): Observable<Product[]> {
+    return this.getProducts(`${this.productUrl}/search/findByNameContaining?name=${name}`);
+  }
+
+  getAllProducts(): Observable<Product[]> {
+    return this.getProducts(this.productUrl);
+  }
+
+  getCategoryById(categoryId: number): Observable<ProductCategory> {
     const searchUrl = `${this.categoryUrl}/search/findById?id=${categoryId}`;
     return this.httpClient.get<GetResponseCategories>(searchUrl).pipe(
       map(response => response._embedded.productCategories[0])
     );
   }
 
-  getProductCategories(): Observable<ProductCategory[]> {
+  getAllCategories(): Observable<ProductCategory[]> {
     return this.httpClient.get<GetResponseCategories>(this.categoryUrl).pipe(
       map(response => response._embedded.productCategories)
+    );
+  }
+
+  private getProducts(searchUrl: string): Observable<Product[]> {
+    return this.httpClient.get<GetResponseProducts>(searchUrl).pipe(
+      map(response => response._embedded.products)
     );
   }
 }

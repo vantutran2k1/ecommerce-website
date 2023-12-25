@@ -10,8 +10,11 @@ import {ActivatedRoute} from "@angular/router";
 })
 export class ProductListComponent implements OnInit {
   products: Product[] = [];
-  currentCategoryId: number = 1;
+  categoryFilterMode: boolean = false;
+  currentCategoryId: number = -1;
   currentCategoryName: string = "";
+  searchMode: boolean = false;
+  searchKeyword: string = "";
 
   constructor(private productService: ProductService, private route: ActivatedRoute) {
   }
@@ -21,20 +24,38 @@ export class ProductListComponent implements OnInit {
   }
 
   listProducts() {
-    if (this.hasCategoryId()) {
-      this.currentCategoryId = +this.route.snapshot.paramMap.get('id')!;
-    }
+    if (this.hasCategoryId())
+      this.handleCategoryFilterProducts();
+    else if (this.hasSearchKeyword())
+      this.handleSearchProducts();
+    else
+      this.handleAllProducts();
+  }
 
-    this.setCategoryName();
+  private handleAllProducts() {
+    this.productService.getAllProducts().subscribe(products => this.products = products);
+  }
 
-    this.productService.getProductList(this.currentCategoryId).subscribe(data => this.products = data)
+  private handleSearchProducts() {
+    this.searchMode = true;
+
+    this.searchKeyword = this.route.snapshot.paramMap.get('keyword')!;
+    this.productService.getProductsByName(this.searchKeyword).subscribe(products => this.products = products);
+  }
+
+  private handleCategoryFilterProducts() {
+    this.categoryFilterMode = true;
+
+    this.currentCategoryId = +this.route.snapshot.paramMap.get('id')!;
+    this.productService.getCategoryById(this.currentCategoryId).subscribe(category => this.currentCategoryName = category.categoryName);
+    this.productService.getProductsByCategory(this.currentCategoryId).subscribe(products => this.products = products)
   }
 
   private hasCategoryId(): boolean {
     return this.route.snapshot.paramMap.has('id');
   }
 
-  private setCategoryName() {
-    this.productService.getProductCategory(this.currentCategoryId).subscribe(data => this.currentCategoryName = data.categoryName);
+  private hasSearchKeyword(): boolean {
+    return this.route.snapshot.paramMap.has('keyword');
   }
 }
