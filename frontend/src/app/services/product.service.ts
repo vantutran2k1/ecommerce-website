@@ -22,15 +22,16 @@ export class ProductService {
     return this.getProducts(`${this.productUrl}/search/findByNameContaining?name=${name}`);
   }
 
+  getProductById(productId: number): Observable<Product> {
+    return this.httpClient.get<Product>(`${this.productUrl}/${productId}`);
+  }
+
   getAllProducts(): Observable<Product[]> {
     return this.getProducts(this.productUrl);
   }
 
   getCategoryById(categoryId: number): Observable<ProductCategory> {
-    const searchUrl = `${this.categoryUrl}/search/findById?id=${categoryId}`;
-    return this.httpClient.get<GetResponseCategories>(searchUrl).pipe(
-      map(response => response._embedded.productCategories[0])
-    );
+    return this.httpClient.get<ProductCategory>(`${this.categoryUrl}/${categoryId}`);
   }
 
   getAllCategories(): Observable<ProductCategory[]> {
