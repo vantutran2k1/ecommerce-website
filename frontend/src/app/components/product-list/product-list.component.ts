@@ -10,11 +10,18 @@ import {ActivatedRoute} from "@angular/router";
 })
 export class ProductListComponent implements OnInit {
   products: Product[] = [];
+
   categoryFilterMode: boolean = false;
   currentCategoryId: number = -1;
+  previousCategoryId: number = -1;
   currentCategoryName: string = "";
+
   searchMode: boolean = false;
   searchKeyword: string = "";
+
+  pageNumber: number = 1;
+  pageSize: number = 5;
+  totalElements: number = 0;
 
   constructor(private productService: ProductService, private route: ActivatedRoute) {
   }
@@ -45,10 +52,25 @@ export class ProductListComponent implements OnInit {
 
   private handleCategoryFilterProducts() {
     this.categoryFilterMode = true;
-
     this.currentCategoryId = +this.route.snapshot.paramMap.get('id')!;
     this.productService.getCategoryById(this.currentCategoryId).subscribe(category => this.currentCategoryName = category.categoryName);
-    this.productService.getProductsByCategory(this.currentCategoryId).subscribe(products => this.products = products)
+
+    if (this.previousCategoryId != this.currentCategoryId)
+      this.pageNumber = 1;
+    this.previousCategoryId = this.currentCategoryId;
+
+    this.productService.getProductsByCategoryPagination(
+      this.pageNumber - 1,
+      this.pageSize,
+      this.currentCategoryId
+    ).subscribe(
+      response => {
+        this.products = response._embedded.products;
+        this.pageNumber = response.page.number + 1;
+        this.pageSize = response.page.size;
+        this.totalElements = response.page.totalElements;
+      }
+    );
   }
 
   private hasCategoryId(): boolean {
