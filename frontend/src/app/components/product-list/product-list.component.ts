@@ -39,6 +39,12 @@ export class ProductListComponent implements OnInit {
       this.handleAllProducts();
   }
 
+  updatePageSize(pageSize: string) {
+    this.pageSize = +pageSize;
+    this.pageNumber = 1;
+    this.listProducts();
+  }
+
   private handleAllProducts() {
     this.productService.getAllProducts().subscribe(products => this.products = products);
   }
