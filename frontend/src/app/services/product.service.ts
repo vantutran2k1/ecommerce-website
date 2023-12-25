@@ -27,12 +27,22 @@ export class ProductService {
     return this.getProducts(`${this.productUrl}/search/findByNameContaining?name=${name}`);
   }
 
+  getProductsByNamePagination(pageNumber: number, pageSize: number, name: string): Observable<GetResponseProducts> {
+    const searchUrl: string = `${this.productUrl}/search/findByNameContaining?name=${name}&page=${pageNumber}&size=${pageSize}`;
+    return this.httpClient.get<GetResponseProducts>(searchUrl);
+  }
+
   getProductById(productId: number): Observable<Product> {
     return this.httpClient.get<Product>(`${this.productUrl}/${productId}`);
   }
 
   getAllProducts(): Observable<Product[]> {
     return this.getProducts(this.productUrl);
+  }
+
+  getAllProductsPagination(pageNumber: number, pageSize: number): Observable<GetResponseProducts> {
+    const searchUrl: string = `${this.productUrl}?page=${pageNumber}&size=${pageSize}`;
+    return this.httpClient.get<GetResponseProducts>(searchUrl);
   }
 
   getCategoryById(categoryId: number): Observable<ProductCategory> {

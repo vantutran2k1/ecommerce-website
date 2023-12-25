@@ -18,6 +18,7 @@ export class ProductListComponent implements OnInit {
 
   searchMode: boolean = false;
   searchKeyword: string = "";
+  previousKeyword: string = "";
 
   pageNumber: number = 1;
   pageSize: number = 5;
@@ -46,14 +47,25 @@ export class ProductListComponent implements OnInit {
   }
 
   private handleAllProducts() {
-    this.productService.getAllProducts().subscribe(products => this.products = products);
+    this.productService.getAllProductsPagination(
+      this.pageNumber - 1,
+      this.pageSize
+    ).subscribe(this.processResponseProducts());
   }
 
   private handleSearchProducts() {
     this.searchMode = true;
-
     this.searchKeyword = this.route.snapshot.paramMap.get('keyword')!;
-    this.productService.getProductsByName(this.searchKeyword).subscribe(products => this.products = products);
+
+    if (this.previousKeyword != this.searchKeyword)
+      this.pageNumber = 1;
+    this.previousKeyword = this.searchKeyword;
+
+    this.productService.getProductsByNamePagination(
+      this.pageNumber - 1,
+      this.pageSize,
+      this.searchKeyword
+    ).subscribe(this.processResponseProducts());
   }
 
   private handleCategoryFilterProducts() {
@@ -69,14 +81,16 @@ export class ProductListComponent implements OnInit {
       this.pageNumber - 1,
       this.pageSize,
       this.currentCategoryId
-    ).subscribe(
-      response => {
-        this.products = response._embedded.products;
-        this.pageNumber = response.page.number + 1;
-        this.pageSize = response.page.size;
-        this.totalElements = response.page.totalElements;
-      }
-    );
+    ).subscribe(this.processResponseProducts());
+  }
+
+  private processResponseProducts() {
+    return (response: any) => {
+      this.products = response._embedded.products;
+      this.pageNumber = response.page.number + 1;
+      this.pageSize = response.page.size;
+      this.totalElements = response.page.totalElements;
+    };
   }
 
   private hasCategoryId(): boolean {
