@@ -1,7 +1,9 @@
 package com.tutran.backend.config;
 
+import com.tutran.backend.entity.Country;
 import com.tutran.backend.entity.Product;
 import com.tutran.backend.entity.ProductCategory;
+import com.tutran.backend.entity.State;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +19,7 @@ import java.util.Set;
 
 @Configuration
 public class DataRestConfig implements RepositoryRestConfigurer {
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     @Autowired
     public DataRestConfig(EntityManager entityManager) {
@@ -27,26 +29,28 @@ public class DataRestConfig implements RepositoryRestConfigurer {
     @Override
     public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
         HttpMethod[] unsupportedActions = {HttpMethod.PUT, HttpMethod.POST, HttpMethod.DELETE};
-        config.getExposureConfiguration()
-                .forDomainType(Product.class)
-                .withItemExposure(((metadata, httpMethods) -> httpMethods.disable(unsupportedActions)))
-                .withCollectionExposure(((metadata, httpMethods) -> httpMethods.disable(unsupportedActions)));
-
-        config.getExposureConfiguration()
-                .forDomainType(ProductCategory.class)
-                .withItemExposure(((metadata, httpMethods) -> httpMethods.disable(unsupportedActions)))
-                .withCollectionExposure(((metadata, httpMethods) -> httpMethods.disable(unsupportedActions)));
+        disableHttpMethods(Product.class, config, unsupportedActions);
+        disableHttpMethods(ProductCategory.class, config, unsupportedActions);
+        disableHttpMethods(Country.class, config, unsupportedActions);
+        disableHttpMethods(State.class, config, unsupportedActions);
 
         exposesId(config);
     }
 
+    private static void disableHttpMethods(Class<?> entityClass, RepositoryRestConfiguration config, HttpMethod[] unsupportedActions) {
+        config.getExposureConfiguration()
+                .forDomainType(entityClass)
+                .withItemExposure(((metadata, httpMethods) -> httpMethods.disable(unsupportedActions)))
+                .withCollectionExposure(((metadata, httpMethods) -> httpMethods.disable(unsupportedActions)));
+    }
+
     private void exposesId(RepositoryRestConfiguration config) {
         Set<EntityType<?>> entities = entityManager.getMetamodel().getEntities();
-        List<Class> entityClasses = new ArrayList<>();
-        for (EntityType entityType : entities)
+        List<Class<?>> entityClasses = new ArrayList<>();
+        for (EntityType<?> entityType : entities)
             entityClasses.add(entityType.getJavaType());
 
-        Class[] domainTypes = entityClasses.toArray(new Class[0]);
+        Class<?>[] domainTypes = entityClasses.toArray(new Class[0]);
         config.exposeIdsFor(domainTypes);
     }
 }

@@ -1,6 +1,8 @@
 import {Component, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup} from "@angular/forms";
 import {CheckoutFormService} from "../../services/checkout-form.service";
+import {Country} from "../../common/country";
+import {State} from "../../common/state";
 
 @Component({
   selector: 'app-checkout',
@@ -15,6 +17,11 @@ export class CheckoutComponent implements OnInit {
 
   totalPrice: number = 0;
   totalQuantity: number = 0;
+
+  countries: Country[] = [];
+
+  shippingAddressStates: State[] = [];
+  billingAddressStates: State[] = [];
 
   constructor(private formBuilder: FormBuilder, private checkoutFormService: CheckoutFormService) {
   }
@@ -51,6 +58,8 @@ export class CheckoutComponent implements OnInit {
     });
 
     this.checkoutFormService.getCreditCardYears().subscribe(years => this.creditCardYears = years);
+
+    this.checkoutFormService.getCountries().subscribe(countries => this.countries = countries);
   }
 
   onSubmit() {
@@ -58,10 +67,13 @@ export class CheckoutComponent implements OnInit {
   }
 
   copyShippingAddressToBillingAddress(event: any) {
-    if (event.target.checked)
+    if (event.target.checked) {
       this.checkoutFormGroup.controls['billingAddress'].setValue(this.checkoutFormGroup.controls['shippingAddress'].value);
-    else
+      this.billingAddressStates = this.shippingAddressStates;
+    } else {
       this.checkoutFormGroup.controls['billingAddress'].reset();
+      this.billingAddressStates = [];
+    }
   }
 
   handleMonthsAndYears() {
@@ -74,5 +86,17 @@ export class CheckoutComponent implements OnInit {
       startMonth = new Date().getMonth() + 1;
 
     this.checkoutFormService.getCreditCardMonths(startMonth).subscribe(months => this.creditCardMonths = months);
+  }
+
+  getStates(formGroupName: string) {
+    const formGroup = this.checkoutFormGroup.get(formGroupName);
+    const countryCode = formGroup?.value.country.code;
+
+    this.checkoutFormService.getStates(countryCode).subscribe(data => {
+      if (formGroupName === 'shippingAddress')
+        this.shippingAddressStates = data;
+      else if (formGroupName === 'billingAddress')
+        this.billingAddressStates = data;
+    });
   }
 }
